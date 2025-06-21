@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Spacial Web</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="container">
+      <div class="model">
+        <!-- some models can be downloaded at https://developer.apple.com/augmented-reality/quick-look/ -->
+        <!-- <model id="model" src="models/chameleon.usdz" stagemode="orbit"> -->
+        <model
+          id="model"
+          src="models/chameleon.usdz"
+          autoplay
+          stagemode="orbit"
+        >
+          <img src="images/chameleon.png" alt="chameleon" />
+        </model>
+      </div>
+      <!-- loading indicator -->
+      <div class="loading">
+        <img src="images/loading.gif" alt="loading" />
+      </div>
+      <div class="panel hidden">
+        <h1>Chameleon</h1>
+        <!-- <button onclick="{turnLeft()}">left</button> -->
+        <!-- <button onclick="{zeroPosition()}">zero</button> -->
+        <!-- <button onclick="{turnRight()}">right</button> -->
+      </div>
+    </div>
+    <script>
+      const mymodel = document.getElementById("model");
+      if (window.HTMLModelElement) {
+        mymodel.ready
+          .then((result) => {
+            const loading = document.querySelector(".loading");
+            loading.remove();
+            const panel = document.querySelector(".panel");
+            panel.classList.remove("hidden");
+            console.log("Model loaded successfully:", result);
+          })
+          .catch((error) => {
+            console.error("Model failed to load:", error);
+          });
+      } else {
+        const loading = document.querySelector(".loading");
+        loading.remove();
+        console.error("HTMLModelElement is not supported in this browser.");
+      }
+      // these only works without stagemode="orbit"
+      // function turnRight() {
+      //   console.log("turnRight");
+      //   const mymodel = document.getElementById("model");
+      //   const matrix = mymodel.entityTransform;
+      //   const newMatrix = matrix.rotateAxisAngle(0, 1, 0, 90);
+      //   mymodel.entityTransform = newMatrix;
+      // }
+      // function turnLeft() {
+      //   console.log("turnLeft");
+      //   const mymodel = document.getElementById("model");
+      //   const matrix = mymodel.entityTransform;
+      //   const newMatrix = matrix.rotateAxisAngle(0, 1, 0, -90);
+      //   mymodel.entityTransform = newMatrix;
+      // }
+      // function zeroPosition() {
+      //   console.log("zeroPosition");
+      //   const mymodel = document.getElementById("model");
+      //   mymodel.entityTransform = new DOMMatrix();
+      // }
+    </script>
+  </body>
+</html>
