@@ -12,6 +12,10 @@ struct ContentView: View {
         NavigationStack {
             List {
                 NavigationLink("Basic Prompt", destination: BasicPromptView())
+                NavigationLink(
+                    "Guided Generation",
+                    destination: GuidedGenerationView()
+                )
             }
         }
     }
