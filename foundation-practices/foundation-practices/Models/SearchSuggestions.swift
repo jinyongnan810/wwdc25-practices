@@ -10,6 +10,6 @@ import FoundationModels
 
 @Generable
 struct SearchSuggestions {
-    @Guide(description: "A list of search terms", .count(4))
+    @Guide(description: "A list of search terms", .count(10))
     var terms: [String]
 }

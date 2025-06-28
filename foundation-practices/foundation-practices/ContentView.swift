@@ -16,6 +16,10 @@ struct ContentView: View {
                     "Guided Generation",
                     destination: GuidedGenerationView()
                 )
+                NavigationLink(
+                    "Snapshot Streaming",
+                    destination: SnapshotStreamingView()
+                )
             }
         }
     }
