@@ -28,7 +28,7 @@ struct ContentView: View {
 
             }.navigationTitle("Stories")
                 .toolbar {
-                    ToolbarItem(placement: .navigationBarTrailing) {
+                    ToolbarItem(placement: .automatic) {
                         Button {
                             let newStory = Story.blank()
                             stories.append(newStory)
