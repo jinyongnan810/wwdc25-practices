@@ -50,7 +50,7 @@ class Recorder {
         print("set up transcriber done")
         for await input in try await audioStream() {
             print("received audio input: \(input)")
-//            try await transcriber.streamAudioToTranscriber(input)
+            try await transcriber.streamAudioToTranscriber(input)
         }
     }
 
