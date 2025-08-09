@@ -27,8 +27,8 @@ final class Transcriber: Sendable {
 
     var story: Binding<Story>
 
-    var volatileTranscript: AttributedString = "Test"
-    var finalizedTranscript: AttributedString = "Test"
+    var volatileTranscript: AttributedString = ""
+    var finalizedTranscript: AttributedString = ""
 
     static let locale = Locale(components: .init(languageCode: .english, script: nil, languageRegion: .unitedStates))
 

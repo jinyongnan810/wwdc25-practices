@@ -55,6 +55,8 @@ struct StoryView: View {
 
     @State var isPlaying = false
     @State var currentPlaybackTime = 0.0
+    @State var timer: Timer?
+
     init(story: Binding<Story>) {
         let transcriber = Transcriber(story: story)
         _story = story
@@ -96,6 +98,24 @@ struct StoryView: View {
                     }
                 }
                 .disabled(story.isDone || recorder.isSettingUp)
+            }
+            ToolbarItem {
+                Button {
+                    isPlaying.toggle()
+                    if isPlaying {
+                        recorder.playRecording()
+                        timer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { _ in
+                            currentPlaybackTime = recorder.playerNode?.currentTime ?? 0.0
+                        }
+                    } else {
+                        recorder.stopPlaying()
+                        currentPlaybackTime = 0.0
+                        timer = nil
+                    }
+                } label: {
+                    Label("Play", systemImage: isPlaying ? "pause.fill" : "play").foregroundStyle(.blue).font(.title)
+                }
+                .disabled(!story.isDone)
             }
         }
         .onChange(of: isRecording) { _, newValue in

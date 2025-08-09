@@ -21,6 +21,7 @@ class Recorder {
     private let filePath: URL
     var file: AVAudioFile?
     var isSettingUp = false
+    var playerNode: AVAudioPlayerNode?
 
     init(
         story: Binding<Story>,
@@ -55,6 +56,9 @@ class Recorder {
             if isSettingUp {
                 isSettingUp = false
             }
+            if story.isDone.wrappedValue {
+                break
+            }
             print("received audio input: \(input)")
             // Step 3. receive buffer from stream
             try await transcriber.streamAudioToTranscriber(input)
@@ -74,6 +78,8 @@ class Recorder {
     func stopRecording() async throws {
         audioEngine.stop()
         story.isDone.wrappedValue = true
+
+        try await transcriber.finishTranscribing()
 
         Task {
             self.story.title.wrappedValue = try await story.wrappedValue.suggestedTitle() ?? "Apple Intelligence not available."
@@ -122,6 +128,9 @@ class Recorder {
                                              format: audioEngine.inputNode.outputFormat(forBus: 0))
             { [weak self] buffer, _ in
                 guard let self else { return }
+                if story.isDone.wrappedValue {
+                    return
+                }
                 // Step 2-1. write buffer to disk
                 writeBufferToDisk(buffer: buffer)
                 // Step 2-2. streams buffer for further processing
@@ -141,5 +150,47 @@ class Recorder {
         } catch {
             print("file writing error: \(error)")
         }
+    }
+
+    /// For playback
+    func playRecording() {
+        guard let file else {
+            return
+        }
+
+        playerNode = AVAudioPlayerNode()
+        guard let playerNode else {
+            return
+        }
+
+        audioEngine.attach(playerNode)
+        audioEngine.connect(playerNode,
+                            to: audioEngine.outputNode,
+                            format: file.processingFormat)
+
+        playerNode.scheduleFile(file,
+                                at: nil,
+                                completionCallbackType: .dataPlayedBack)
+        { _ in
+        }
+
+        do {
+            try audioEngine.start()
+            playerNode.play()
+        } catch {
+            print("error")
+        }
+    }
+
+    func stopPlaying() {
+        audioEngine.stop()
+    }
+}
+
+extension AVAudioPlayerNode {
+    var currentTime: TimeInterval {
+        guard let nodeTime: AVAudioTime = lastRenderTime, let playerTime: AVAudioTime = playerTime(forNodeTime: nodeTime) else { return 0 }
+
+        return Double(playerTime.sampleTime) / playerTime.sampleRate
     }
 }
