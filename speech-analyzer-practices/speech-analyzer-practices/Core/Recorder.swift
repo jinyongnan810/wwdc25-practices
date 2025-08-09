@@ -12,6 +12,7 @@ enum RecorderError: Error {
     case notAuthorized
 }
 
+@Observable
 class Recorder {
     private let audioEngine: AVAudioEngine
     private let transcriber: Transcriber
@@ -19,6 +20,7 @@ class Recorder {
     var story: Binding<Story>
     private let filePath: URL
     var file: AVAudioFile?
+    var isSettingUp = false
 
     init(
         story: Binding<Story>,
@@ -35,6 +37,7 @@ class Recorder {
     // Recording
     func startRecording() async throws {
         print("startRecording")
+        isSettingUp = true
 //        guard await isAuthorized() else {
 //            print("unauthorized")
         ////            throw RecorderError.notAuthorized
@@ -49,7 +52,11 @@ class Recorder {
         try await transcriber.setupTranscriber()
         print("set up transcriber done")
         for await input in try await audioStream() {
+            if isSettingUp {
+                isSettingUp = false
+            }
             print("received audio input: \(input)")
+            // Step 3. receive buffer from stream
             try await transcriber.streamAudioToTranscriber(input)
         }
     }
@@ -108,12 +115,16 @@ class Recorder {
             outputContinuation = continuation
             try? setupAudioEngine()
             print("set up audio engine done")
+            // Step 1. Intercept raw audio from microphone
+            // Fires Closure everytime buffer is full.
             audioEngine.inputNode.installTap(onBus: 0,
                                              bufferSize: 4096,
                                              format: audioEngine.inputNode.outputFormat(forBus: 0))
             { [weak self] buffer, _ in
                 guard let self else { return }
+                // Step 2-1. write buffer to disk
                 writeBufferToDisk(buffer: buffer)
+                // Step 2-2. streams buffer for further processing
                 outputContinuation?.yield(buffer)
                 print("write buffer to disk and yield. outputContiuation: \(String(describing: outputContinuation))")
             }

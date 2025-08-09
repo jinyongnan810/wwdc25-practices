@@ -8,6 +8,45 @@
 import SwiftUI
 internal import CoreMedia
 
+// User
+// │
+// │ 1. Tap "Record"
+// ▼
+// Recorder.startRecording()
+// │
+// │──► Sets up AVAudioEngine
+// │──► Calls transcriber.setupTranscriber()
+// │        │
+// │        │──► Sets up SpeechTranscriber + SpeechAnalyzer
+// │        │──► Creates AsyncStream (inputSequence, inputBuilder)
+// │        │──► Starts listening for results in background task
+//                                    │
+//                                    │──► For each audio buffer:
+//                                        │       │
+//                                    │       │──► writeBufferToDisk(buffer)
+//                                    │       │──► Calls transcriber.streamAudioToTranscriber(buffer)
+//                                    │                │
+//                                    │                │──► Converts buffer format
+//                                    │                │──► Wraps in AnalyzerInput
+//                                    │                │──► inputBuilder.yield(input)
+//                                    │
+//                                    │
+//                                    ▼
+//                                    Transcriber
+//                                    │
+//                                    │──► SpeechAnalyzer consumes inputSequence
+//                                    │──► SpeechTranscriber produces results
+//                                    │──► For each result:
+//                                        │        │
+//                                    │        │──► If final:
+//                                        │        │      Append to finalizedTranscript
+//                                    │        │      Update Story
+//                                    │        │   Else:
+//                                        │        │      Update volatileTranscript
+//                                    │
+//                                    ▼
+//                                    [UI updates with transcript]
+
 struct StoryView: View {
     @Binding var story: Story
     @State var recorder: Recorder
@@ -24,29 +63,39 @@ struct StoryView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading) {
-            if !story.isDone {
-                Text(transcriber.finalizedTranscript + transcriber.volatileTranscript)
-                    .font(.title)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-            } else {
-                textScrollView(attributedString: story.storyBrokenUpByLines())
-                    .frame(maxWidth: .infinity, alignment: .leading)
-            }
+        ScrollView {
+            VStack(alignment: .leading) {
+                if !story.isDone {
+                    Text(transcriber.finalizedTranscript + transcriber.volatileTranscript)
+                        .font(.title)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                } else {
+                    Text(attributedStringWithCurrentValueHighlighted(attributedString: story.storyBrokenUpByLines()))
+                        .font(.title)
+                }
+                Spacer()
+            }.padding()
         }
+
         .navigationTitle(Text(story.title))
         .toolbar {
             ToolbarItem {
                 Button {
                     isRecording.toggle()
                 } label: {
-                    if isRecording {
+                    if recorder.isSettingUp {
+                        Image(systemName: "arrow.triangle.2.circlepath")
+                            .symbolEffect(
+                                .rotate,
+                                options: .repeat(.continuous),
+                            )
+                    } else if isRecording {
                         Label("Stop", systemImage: "pause.fill").tint(.red)
                     } else {
                         Label("Record", systemImage: "record.circle").tint(.red)
                     }
                 }
-                .disabled(story.isDone)
+                .disabled(story.isDone || recorder.isSettingUp)
             }
         }
         .onChange(of: isRecording) { _, newValue in
@@ -56,15 +105,6 @@ struct StoryView: View {
                 } else {
                     try? await recorder.stopRecording()
                 }
-            }
-        }
-    }
-
-    @ViewBuilder func textScrollView(attributedString: AttributedString) -> some View {
-        ScrollView {
-            VStack(alignment: .leading) {
-                textWithHighlighting(attributedString: attributedString)
-                Spacer()
             }
         }
     }
@@ -95,13 +135,6 @@ struct StoryView: View {
         }
 
         return false
-    }
-
-    @ViewBuilder func textWithHighlighting(attributedString: AttributedString) -> some View {
-        Group {
-            Text(attributedStringWithCurrentValueHighlighted(attributedString: attributedString))
-                .font(.title)
-        }
     }
 }
 

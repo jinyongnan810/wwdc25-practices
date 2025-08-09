@@ -30,7 +30,7 @@ class Story: Identifiable {
     func suggestedTitle() async throws -> String? {
         guard SystemLanguageModel.default.isAvailable else { return nil }
         let session = LanguageModelSession(model: SystemLanguageModel.default)
-        let answer = try await session.respond(to: "Here is a children's story. Can you please return your very best suggested title for it, with no other text? The title should be descriptive of the story and include the main character's name. Story: \(text.characters)")
+        let answer = try await session.respond(to: "この物語のタイトルを考えてください。タイトルには主人公の名前を含む必要があります。返答は日本語のタイトルのみにしてください。 物語は以下です: \(text.characters)")
         return answer.content.trimmingCharacters(in: .punctuationCharacters)
     }
 }
