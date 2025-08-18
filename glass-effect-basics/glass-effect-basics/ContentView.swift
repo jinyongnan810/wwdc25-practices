@@ -9,13 +9,7 @@ import SwiftUI
 
 struct ContentView: View {
     var body: some View {
-        NavigationStack {
-            List {
-                NavigationLink("Glass Effect, Container") {
-                    GlassEffectView()
-                }
-            }
-        }
+        GlassEffectView()
     }
 }
 
