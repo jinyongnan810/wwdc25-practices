@@ -11,7 +11,7 @@ struct ContentView: View {
     var body: some View {
         NavigationStack {
             List {
-                NavigationLink(".glassEffect()") {
+                NavigationLink("Glass Effect, Container") {
                     GlassEffectView()
                 }
             }
